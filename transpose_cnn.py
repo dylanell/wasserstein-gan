@@ -6,13 +6,11 @@ import torch
 
 class TransposeCNN(torch.nn.Module):
     # initialize the base class and define network layers
-    def __init__(self, in_dim, out_chan, hid_act=torch.nn.ReLU(), \
-                 out_act=torch.nn.Tanh(), layer_norm=False):
+    def __init__(self, in_dim, out_chan, out_act=None):
         # run base initializer
         super(TransposeCNN, self).__init__()
 
         # set activation functions
-        self.hid_act = hid_act
         self.out_act = out_act
 
         # define fully connected input layer
@@ -27,34 +25,37 @@ class TransposeCNN(torch.nn.Module):
             32, out_chan, 3, stride=1, padding=1
         )
 
-        # define layer norm layers otherwise just use identity (no norm)
-        if layer_norm:
-            self.norm_1 = torch.nn.LayerNorm([512, 2, 2])
-            self.norm_2 = torch.nn.LayerNorm([256, 4, 4])
-            self.norm_3 = torch.nn.LayerNorm([128, 8, 8])
-            self.norm_4 = torch.nn.LayerNorm([64, 16, 16])
-            self.norm_5 = torch.nn.LayerNorm([32, 32, 32])
-        else:
-            self.norm_1 = torch.nn.Identity()
-            self.norm_2 = torch.nn.Identity()
-            self.norm_3 = torch.nn.Identity()
-            self.norm_4 = torch.nn.Identity()
-            self.norm_5 = torch.nn.Identity()
+        # define layer norm layers
+        self.norm_1 = torch.nn.LayerNorm([512, 2, 2])
+        self.norm_2 = torch.nn.LayerNorm([256, 4, 4])
+        self.norm_3 = torch.nn.LayerNorm([128, 8, 8])
+        self.norm_4 = torch.nn.LayerNorm([64, 16, 16])
+        self.norm_5 = torch.nn.LayerNorm([32, 32, 32])
 
     # define network layer connections and forward propagate input x through
     # the network and return output
     def forward(self, x):
-        # get batch size
+        # get number of samples in input batch
         bs = x.shape[0]
 
         # propagate x through network
-        z = self.hid_act(self.fc_1(x))
-        z = z.view(bs, 512, 2, 2)
-        z = self.norm_1(z)
-        z = self.norm_2(self.hid_act(self.conv_1(z, output_size=(bs, 256, 4, 4))))
-        z = self.norm_3(self.hid_act(self.conv_2(z, output_size=(bs, 128, 8, 8))))
-        z = self.norm_4(self.hid_act(self.conv_3(z, output_size=(bs, 64, 16, 16))))
-        z = self.norm_5(self.hid_act(self.conv_4(z, output_size=(bs, 32, 32, 32))))
-        z = self.out_act(self.conv_5(z, output_size=(bs, 1, 32, 32)))
+        z_1 = torch.relu(self.fc_1(x))
+        z_1_unflat = torch.reshape(z_1, [bs, 512, 2, 2])
+        z_1_unflat_norm = self.norm_1(z_1_unflat)
+        z_2 = torch.relu(self.conv_1(z_1_unflat_norm, output_size=(bs, 256, 4, 4)))
+        z_2_norm = self.norm_2(z_2)
+        z_3 = torch.relu(self.conv_2(z_2_norm, output_size=(bs, 128, 8, 8)))
+        z_3_norm = self.norm_3(z_3)
+        z_4 = torch.relu(self.conv_3(z_3_norm, output_size=(bs, 64, 16, 16)))
+        z_4_norm = self.norm_4(z_4)
+        z_5 = torch.relu(self.conv_4(z_4_norm, output_size=(bs, 32, 32, 32)))
+        z_5_norm = self.norm_5(z_5)
+        z_6 = self.conv_5(z_5_norm, output_size=(bs, 1, 32, 32))
 
-        return z
+        # add final activation
+        if self.out_act is not None:
+            z_out = self.out_act(z_6)
+        else:
+            z_out = z_6
+
+        return z_out

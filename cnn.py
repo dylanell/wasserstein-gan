@@ -6,13 +6,11 @@ import torch
 
 class CNN(torch.nn.Module):
     # initialize the base class and define network layers
-    def __init__(self, in_chan, out_dim, hid_act=torch.nn.ReLU(), \
-                 out_act=torch.nn.Identity(), layer_norm=False):
+    def __init__(self, in_chan, out_dim, out_act=None):
         # run base initializer
         super(CNN, self).__init__()
 
         # set activation functions
-        self.hid_act = hid_act
         self.out_act = out_act
 
         # define convolutional layers
@@ -22,19 +20,12 @@ class CNN(torch.nn.Module):
         self.conv_4 = torch.nn.Conv2d(128, 256, 3, stride=2, padding=1)
         self.conv_5 = torch.nn.Conv2d(256, 512, 3, stride=2, padding=1)
 
-        # define layer norm layers otherwise just use identity (no norm)
-        if layer_norm:
-            self.norm_1 = torch.nn.LayerNorm([32, 32, 32])
-            self.norm_2 = torch.nn.LayerNorm([64, 16, 16])
-            self.norm_3 = torch.nn.LayerNorm([128, 8, 8])
-            self.norm_4 = torch.nn.LayerNorm([256, 4, 4])
-            self.norm_5 = torch.nn.LayerNorm([512, 2, 2])
-        else:
-            self.norm_1 = torch.nn.Identity()
-            self.norm_2 = torch.nn.Identity()
-            self.norm_3 = torch.nn.Identity()
-            self.norm_4 = torch.nn.Identity()
-            self.norm_5 = torch.nn.Identity()
+        # define layer norm layers
+        self.norm_1 = torch.nn.LayerNorm([32, 32, 32])
+        self.norm_2 = torch.nn.LayerNorm([64, 16, 16])
+        self.norm_3 = torch.nn.LayerNorm([128, 8, 8])
+        self.norm_4 = torch.nn.LayerNorm([256, 4, 4])
+        self.norm_5 = torch.nn.LayerNorm([512, 2, 2])
 
         # define fully connected output layer
         self.fc_1 = torch.nn.Linear(512*2*2, out_dim)
@@ -42,11 +33,18 @@ class CNN(torch.nn.Module):
     # define network layer connections and forward propagate input x through
     # the network and return output
     def forward(self, x):
-        z = self.norm_1(self.hid_act(self.conv_1(x)))
-        z = self.norm_2(self.hid_act(self.conv_2(x)))
-        z = self.norm_3(self.hid_act(self.conv_3(x)))
-        z = self.norm_4(self.hid_act(self.conv_4(x)))
-        z = self.norm_5(self.hid_act(self.conv_5(x)))
-        z = self.out_act(self.fc_1(torch.flatten(z, start_dim=1)))
+        z_1 = torch.relu(self.conv_1(x))
+        z_2 = torch.relu(self.conv_2(z_1))
+        z_3 = torch.relu(self.conv_3(z_2))
+        z_4 = torch.relu(self.conv_4(z_3))
+        z_5 = torch.relu(self.conv_5(z_4))
+        z_5_flat = torch.flatten(z_5, start_dim=1)
+        z_6 = self.fc_1(z_5_flat)
 
-        return z
+        # add final activation
+        if self.out_act is not None:
+            z_out = self.out_act(z_6)
+        else:
+            z_out = z_6
+
+        return z_out
