@@ -103,8 +103,8 @@ class WassersteinGAN():
                 bs = real_img_batch.shape[0]
 
                 # sample from z and eps distribution and clip based on sumber of samples in batch
-                z_sample = self.z_dist.sample()[:bs]
-                eps_sample = self.eps_dist.sample()[:bs]
+                z_sample = self.z_dist.sample()[:bs].to(self.device)
+                eps_sample = self.eps_dist.sample()[:bs].to(self.device)
 
                 # generate batch of fake images by feeding sampled z through generator
                 fake_img_batch = self.generator(z_sample)
@@ -165,8 +165,8 @@ class WassersteinGAN():
             print('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: {:.2f}'.format(e+1, epoch_avg_w_dist, grad_pen))
 
             # save current state of generator and critic
-            torch.save(generator.state_dict(), '/tmp/generator.pt')
-            torch.save(critic.state_dict(), '/tmp/critic.pt')
+            torch.save(self.generator.state_dict(), '/tmp/generator.pt')
+            torch.save(self.critic.state_dict(), '/tmp/critic.pt')
 
         # done with all epochs
 
