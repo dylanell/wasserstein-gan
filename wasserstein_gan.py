@@ -185,6 +185,9 @@ class WassersteinGAN():
             # report epoch stats
             print('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: {:.2f}'.format(e+1, epoch_avg_w_dist, grad_pen))
 
+            # new sample from z dist
+            z_sample = self.z_dist.sample()[:64].to(self.device)
+
             # generate const batch of fake samples and tile
             fake_img_tiled = self.generate_samples_and_tile(z_sample)
 
