@@ -156,7 +156,7 @@ class WassersteinGAN():
                 # accumulate running wasserstein distance
                 running_w_dist += w_dist.item()
 
-            # done with batch
+            # done with current epoch
 
             # compute average wasserstein distance over epoch
             epoch_avg_w_dist = running_w_dist / i
@@ -168,6 +168,6 @@ class WassersteinGAN():
             torch.save(generator.state_dict(), '/tmp/generator.pt')
             torch.save(critic.state_dict(), '/tmp/critic.pt')
 
-        # done with epoch
+        # done with all epochs
 
         print('[INFO] done training')
