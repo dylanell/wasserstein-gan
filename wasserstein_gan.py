@@ -5,12 +5,16 @@ Wasserstein GAN class.
 import torch
 from tqdm import tqdm
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 # relative imports
 from cnn import CNN
 from transpose_cnn import TransposeCNN
 
-class WassersteinGAN():
+from data_utils import tile_images
 
+class WassersteinGAN():
     def __init__(self, config):
         # get args
         self.config = config
@@ -56,12 +60,10 @@ class WassersteinGAN():
         self.generator.to(self.device)
 
     def print_structure(self):
-
         print('[INFO] critic structure \n{}'.format(self.critic))
         print('[INFO] generator structure \n{}'.format(self.generator))
 
     def compute_losses(self, real_crit_out, fake_crit_out, crit_grad):
-
         # compute wasserstein distance estimate
         wass_dist = torch.mean(real_crit_out - fake_crit_out)
 
@@ -79,8 +81,22 @@ class WassersteinGAN():
 
         return gen_loss, crit_loss, wass_dist, crit_grad_penalty
 
-    def train(self, dataloader):
+    def generate_samples_and_tile(self, z):
+        # geneatr a batch of fak images from z input
+        fake_img_batch = self.generator(z)
 
+        # detach, move to cpu, and covert images to numpy
+        fake_img_batch = fake_img_batch.detach().cpu().numpy()
+
+        # move channel dim to last dim of tensor
+        fake_img_batch = np.transpose(fake_img_batch, [0, 2, 3, 1])
+
+        # construct tiled image (squeeze to remove channel dim for grayscale)
+        fake_img_tiled = np.squeeze(tile_images(fake_img_batch))
+
+        return fake_img_tiled
+
+    def train(self, dataloader):
         print('[INFO] training...')
 
         # iterate through epochs
@@ -136,17 +152,22 @@ class WassersteinGAN():
                     crit_grad
                 )
 
-                # NOTE: the updates below must be in that order to avoid an error that prevents
-                # gradient computation due to an inplace operator. Not sure yet why :(
+                # NOTE: Currently must update critic and generator separately. If both are updated
+                # within the same loop, either updatin doesn't happen, or an inplace operator
+                # error occurs which prevents gradient computation, depending on the ordering of
+                # the zero_grad(), backward(), step() calls. Currently don't know why :(
 
-                # update critic and generator if 10th step
                 if i % 10 == 9:
-                    self.crit_opt.zero_grad()
+                    # update just the generator (every 10th step)
                     self.gen_opt.zero_grad()
-                    crit_loss.backward(retain_graph=True)
                     gen_loss.backward()
-                    self.crit_opt.step()
                     self.gen_opt.step()
+
+                    # generate const batch of fake samples and tile
+                    fake_img_tiled = self.generate_samples_and_tile(self.z_const)
+
+                    # save tiled image
+                    plt.imsave('/tmp/gen_img_step_{}.png'.format((e*(int(self.config.ntrain/self.config.bs)+1))+i), fake_img_tiled)
                 else:
                     # update just the critic
                     self.crit_opt.zero_grad()
@@ -163,6 +184,12 @@ class WassersteinGAN():
 
             # report epoch stats
             print('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: {:.2f}'.format(e+1, epoch_avg_w_dist, grad_pen))
+
+            # generate const batch of fake samples and tile
+            fake_img_tiled = self.generate_samples_and_tile(self.z_dist.sample()[:64])
+
+            # save tiled image
+            plt.imsave('/tmp/gen_img_epoch_{}.png'.format(e+1), fake_img_tiled)
 
             # save current state of generator and critic
             torch.save(self.generator.state_dict(), '/tmp/generator.pt')
