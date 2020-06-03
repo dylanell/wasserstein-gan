@@ -49,7 +49,7 @@ class WassersteinGAN():
         )
 
         # sample a batch of z to have constant set of generator inputs as model trains
-        self.z_const = self.z_dist.sample()
+        self.z_const = self.z_dist.sample().to(self.device)
 
         # initialize critic and generator optimizers
         self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.config.lr)
@@ -186,7 +186,7 @@ class WassersteinGAN():
             print('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: {:.2f}'.format(e+1, epoch_avg_w_dist, grad_pen))
 
             # generate const batch of fake samples and tile
-            fake_img_tiled = self.generate_samples_and_tile(self.z_dist.sample()[:64])
+            fake_img_tiled = self.generate_samples_and_tile(z_sample)
 
             # save tiled image
             plt.imsave('/tmp/gen_img_epoch_{}.png'.format(e+1), fake_img_tiled)
