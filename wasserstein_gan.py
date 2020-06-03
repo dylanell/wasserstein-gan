@@ -49,7 +49,7 @@ class WassersteinGAN():
         )
 
         # sample a batch of z to have constant set of generator inputs as model trains
-        self.z_const = self.z_dist.sample().to(self.device)
+        self.z_const = self.z_dist.sample()[:64].to(self.device)
 
         # initialize critic and generator optimizers
         self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.config.lr)
