@@ -32,7 +32,8 @@ def main():
     # intialize MNIST dataloaders
     train_loader, test_loader = make_mnist_dataloaders(
         batch_size=args.bs,
-        num_workers=args.dd
+        num_workers=args.nw,
+        data_dir=args.dd
     )
 
     # train gan on training set

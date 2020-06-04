@@ -6,7 +6,7 @@ import torch
 import torchvision
 from torchvision.transforms import transforms
 
-def make_mnist_dataloaders(batch_size=16, num_workers=1, data_dir='/tmp/mnist_data'):
+def make_mnist_dataloaders(batch_size=16, num_workers=1, data_dir='/tmp/mnist_data/'):
     """
     Description: Make a pytorch dataloader for the MNIST training and testing sets that includes
         preprocessing transforms and batching.
