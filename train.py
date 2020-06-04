@@ -2,9 +2,6 @@
 Train a Wasserstein GAN on the MNIST dataset.
 """
 
-import torch
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 import argparse
 
 # relative imports
@@ -38,6 +35,8 @@ def main():
 
     # train gan on training set
     gan.train(train_loader, args.ne)
+
+
 
 if __name__ == '__main__':
     main()
