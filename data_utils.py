@@ -3,6 +3,32 @@ General data handling utilities.
 """
 
 import numpy as np
+import imageio
+import glob
+
+def make_gif_from_numbered_images(wildcard_str, dest_path='/tmp/nice.gif'):
+    """
+    Description: Given a wildcard string to match all image files within a directory (e.g.
+        '/tmp/mymodel*.png'), construct a gif from all files matching this wildcard. Requires
+        image file names end with an order number (e.g. 'image_<order_number>.png') and gif is constructed in ascending order by order number. Saves gif to /tmp directory by default.
+    Args:
+        - wildcard_str (string): wildcard string to match all image files to make gif.
+        - dest_path (string): path and filename to save gif.
+    Returns:
+        - None
+    """
+
+    # get all images that match wildcard string
+    img_files = glob.glob(wildcard_str)
+
+    # sort filenames by numbers
+    img_files.sort(key=lambda f: int(f.split('_')[-1].split('.')[0]))
+
+    # create list if image objects
+    img_list = [imageio.imread(img) for img in img_files]
+
+    # write image list to gif
+    imageio.mimwrite(dest_path, img_list, fps=200)
 
 def tile_images(imgs):
     """
