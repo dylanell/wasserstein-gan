@@ -21,7 +21,7 @@ class WassersteinGAN():
 
         # initialize logging to create new log file and log any level event
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
-            filename='{}/{}.log'.format(self.conf.ld, self.conf.name), filemode='w', \
+            filename='{}{}.log'.format(self.conf.ld, self.conf.name), filemode='w', \
             level=logging.DEBUG)
 
         # try to get gpu device, if not just use cpu
@@ -167,7 +167,7 @@ class WassersteinGAN():
                         fake_img_tiled = self.generate_samples_and_tile(self.z_const)
 
                         # save tiled image
-                        plt.imsave('{}/{}_gen_step_{}.png'.format(self.conf.ld, self.conf.name, \
+                        plt.imsave('{}{}_gen_step_{}.png'.format(self.conf.ld, self.conf.name, \
                             (e*(int(self.conf.ntrain/self.conf.bs)+1))+i), fake_img_tiled)
                 else:
                     # update just the critic
@@ -195,13 +195,13 @@ class WassersteinGAN():
 
             if self.conf.v:
                 # save tiled image
-                plt.imsave('{}/{}_gen_epoch_{}.png'.format(self.conf.ld, self.conf.name, e+1), \
+                plt.imsave('{}{}_gen_epoch_{}.png'.format(self.conf.ld, self.conf.name, e+1), \
                     fake_img_tiled)
 
             # save current state of generator and critic
-            torch.save(self.generator.state_dict(), '{}/{}_generator.pt'.format(self.conf.ld, \
+            torch.save(self.generator.state_dict(), '{}{}_generator.pt'.format(self.conf.ld, \
                 self.conf.name))
-            torch.save(self.critic.state_dict(), '{}/{}_critic.pt'.format(self.conf.ld, \
+            torch.save(self.critic.state_dict(), '{}{}_critic.pt'.format(self.conf.ld, \
                 self.conf.name))
 
         # done with all epochs
