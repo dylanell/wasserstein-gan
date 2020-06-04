@@ -173,8 +173,6 @@ class WassersteinGAN():
                 # accumulate running wasserstein distance
                 running_w_dist += w_dist.item()
 
-                if i % 50 == 49: break
-
             # done with current epoch
 
             # compute average wasserstein distance over epoch
