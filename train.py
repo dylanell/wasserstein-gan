@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--nchan', type=int, default=1, help='sample channel dimension')
     parser.add_argument('--name', type=str, default='wgan', help='model name')
     parser.add_argument('--v', type=bool, default=False, help='verbose flag')
+    parser.add_argument('--ld', type=str, default='/tmp', help='log and other output directory')
     args = parser.parse_args()
 
     # initialize gan model
