@@ -17,51 +17,51 @@ from data_utils import tile_images
 class WassersteinGAN():
     def __init__(self, config):
         # get args
-        self.config = config
+        self.conf = config
 
         # try to get gpu device, if not just use cpu
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
         # initialize critic (CNN) model
         self.critic = CNN(
-            in_chan=self.config.nchan,
+            in_chan=self.conf.nchan,
             out_dim=1,
             out_act=None
         )
 
         # initialize generator (TransposeCNN) model
         self.generator = TransposeCNN(
-            in_dim=self.config.zdim,
-            out_chan=self.config.nchan,
+            in_dim=self.conf.zdim,
+            out_chan=self.conf.nchan,
             out_act=torch.nn.Tanh()
         )
 
         # initialize zdim dimensional normal distribution to sample generator inputs
         self.z_dist = torch.distributions.normal.Normal(
-            torch.zeros(self.config.bs, self.config.zdim),
-            torch.ones(self.config.bs, self.config.zdim)
+            torch.zeros(self.conf.bs, self.conf.zdim),
+            torch.ones(self.conf.bs, self.conf.zdim)
         )
 
         # initialize bs dimensional uniform distribution to sample eps vals for creating interpolations
         self.eps_dist = torch.distributions.uniform.Uniform(
-            torch.zeros(self.config.bs, 1, 1, 1),
-            torch.ones(self.config.bs, 1, 1, 1)
+            torch.zeros(self.conf.bs, 1, 1, 1),
+            torch.ones(self.conf.bs, 1, 1, 1)
         )
 
         # sample a batch of z to have constant set of generator inputs as model trains
         self.z_const = self.z_dist.sample()[:64].to(self.device)
 
         # initialize critic and generator optimizers
-        self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.config.lr)
-        self.gen_opt = torch.optim.Adam(self.generator.parameters(), lr=self.config.lr)
+        self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.conf.lr)
+        self.gen_opt = torch.optim.Adam(self.generator.parameters(), lr=self.conf.lr)
 
         # move tensors to device
         self.critic.to(self.device)
         self.generator.to(self.device)
 
     def print_structure(self):
-        print('[INFO] critic structure \n{}'.format(self.critic))
-        print('[INFO] generator structure \n{}'.format(self.generator))
+        print('[INFO] \'{}\' critic structure \n{}'.format(self.conf.name, self.critic))
+        print('[INFO] \'{}\' generator structure \n{}'.format(self.conf.name, self.generator))
 
     def compute_losses(self, real_crit_out, fake_crit_out, crit_grad):
         # compute wasserstein distance estimate
@@ -96,21 +96,15 @@ class WassersteinGAN():
 
         return fake_img_tiled
 
-    def train(self, dataloader):
-        print('[INFO] training...')
-
+    def train(self, dataloader, num_epochs):
         # iterate through epochs
-        for e in range(self.config.ne):
+        for e in range(num_epochs):
 
             # accumulator for wasserstein distance over an epoch
             running_w_dist = 0.0
 
             # iteate through batches
-            for i, batch in tqdm(
-                    enumerate(dataloader),
-                    desc='[PROGRESS] epoch {}'.format(e+1),
-                    total=int(self.config.ntrain/self.config.bs)+1
-                ):
+            for i, batch in enumerate(dataloader):
 
                 # get images from batch
                 real_img_batch = batch[0].to(self.device)
@@ -153,7 +147,7 @@ class WassersteinGAN():
                 )
 
                 # NOTE: Currently must update critic and generator separately. If both are updated
-                # within the same loop, either updatin doesn't happen, or an inplace operator
+                # within the same loop, either updating doesn't happen, or an inplace operator
                 # error occurs which prevents gradient computation, depending on the ordering of
                 # the zero_grad(), backward(), step() calls. Currently don't know why :(
 
@@ -163,11 +157,13 @@ class WassersteinGAN():
                     gen_loss.backward()
                     self.gen_opt.step()
 
-                    # generate const batch of fake samples and tile
-                    fake_img_tiled = self.generate_samples_and_tile(self.z_const)
+                    if self.conf.v:
+                        # generate const batch of fake samples and tile
+                        fake_img_tiled = self.generate_samples_and_tile(self.z_const)
 
-                    # save tiled image
-                    plt.imsave('/tmp/gen_img_step_{}.png'.format((e*(int(self.config.ntrain/self.config.bs)+1))+i), fake_img_tiled)
+                        # save tiled image
+                        plt.imsave('/tmp/{}_gen_step_{}.png'.format(self.conf.name, \
+                            (e*(int(self.conf.ntrain/self.conf.bs)+1))+i), fake_img_tiled)
                 else:
                     # update just the critic
                     self.crit_opt.zero_grad()
@@ -177,13 +173,17 @@ class WassersteinGAN():
                 # accumulate running wasserstein distance
                 running_w_dist += w_dist.item()
 
+                if i % 50 == 49: break
+
             # done with current epoch
 
             # compute average wasserstein distance over epoch
             epoch_avg_w_dist = running_w_dist / i
 
             # report epoch stats
-            print('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: {:.2f}'.format(e+1, epoch_avg_w_dist, grad_pen))
+            with open('/tmp/{}_log.txt'.format(self.conf.name), 'a+') as fp:
+                fp.write('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: '\
+                    '{:.2f}\n'.format(e+1, epoch_avg_w_dist, grad_pen))
 
             # new sample from z dist
             z_sample = self.z_dist.sample()[:64].to(self.device)
@@ -191,13 +191,13 @@ class WassersteinGAN():
             # generate const batch of fake samples and tile
             fake_img_tiled = self.generate_samples_and_tile(z_sample)
 
-            # save tiled image
-            plt.imsave('/tmp/gen_img_epoch_{}.png'.format(e+1), fake_img_tiled)
+            if self.conf.v:
+                # save tiled image
+                plt.imsave('/tmp/{}_gen_epoch_{}.png'.format(self.conf.name, e+1), \
+                    fake_img_tiled)
 
             # save current state of generator and critic
-            torch.save(self.generator.state_dict(), '/tmp/generator.pt')
-            torch.save(self.critic.state_dict(), '/tmp/critic.pt')
+            torch.save(self.generator.state_dict(), '/tmp/{}_generator.pt'.format(self.conf.name))
+            torch.save(self.critic.state_dict(), '/tmp/{}_critic.pt'.format(self.conf.name))
 
         # done with all epochs
-
-        print('[INFO] done training')
