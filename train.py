@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--name', type=str, default='wgan', help='model name')
     parser.add_argument('--v', type=bool, default=False, help='verbose flag')
     parser.add_argument('--ld', type=str, default='/tmp/', help='log and other output directory')
+    parser.add_argument('--dd', type=str, default='/tmp/mnist_data/', help='mnist data directory')
     args = parser.parse_args()
 
     # initialize gan model
@@ -31,7 +32,7 @@ def main():
     # intialize MNIST dataloaders
     train_loader, test_loader = make_mnist_dataloaders(
         batch_size=args.bs,
-        num_workers=args.nw
+        num_workers=args.dd
     )
 
     # train gan on training set
