@@ -4,7 +4,7 @@ Wasserstein GAN class.
 
 import torch
 from tqdm import tqdm
-
+import logging
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,6 +18,11 @@ class WassersteinGAN():
     def __init__(self, config):
         # get args
         self.conf = config
+
+        # initialize logging to create new log file and log any level event
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
+            filename='{}/{}.log'.format(self.conf.ld, self.conf.name), filemode='w', \
+            level=logging.DEBUG)
 
         # try to get gpu device, if not just use cpu
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -162,7 +167,7 @@ class WassersteinGAN():
                         fake_img_tiled = self.generate_samples_and_tile(self.z_const)
 
                         # save tiled image
-                        plt.imsave('/tmp/{}_gen_step_{}.png'.format(self.conf.name, \
+                        plt.imsave('{}/{}_gen_step_{}.png'.format(self.conf.ld, self.conf.name, \
                             (e*(int(self.conf.ntrain/self.conf.bs)+1))+i), fake_img_tiled)
                 else:
                     # update just the critic
@@ -178,10 +183,9 @@ class WassersteinGAN():
             # compute average wasserstein distance over epoch
             epoch_avg_w_dist = running_w_dist / i
 
-            # report epoch stats
-            with open('/tmp/{}_log.txt'.format(self.conf.name), 'a+') as fp:
-                fp.write('[INFO] epoch: {}, wasserstein distance: {:.2f}, gradient penalty: '\
-                    '{:.2f}\n'.format(e+1, epoch_avg_w_dist, grad_pen))
+            # log epoch stats info
+            logging.info('| epoch: {:3} | wasserstein distance: {:6.2f} | gradient penalty: '\
+                '{:6.2f} |'.format(e+1, epoch_avg_w_dist, grad_pen))
 
             # new sample from z dist
             z_sample = self.z_dist.sample()[:64].to(self.device)
@@ -191,11 +195,13 @@ class WassersteinGAN():
 
             if self.conf.v:
                 # save tiled image
-                plt.imsave('/tmp/{}_gen_epoch_{}.png'.format(self.conf.name, e+1), \
+                plt.imsave('{}/{}_gen_epoch_{}.png'.format(self.conf.ld, self.conf.name, e+1), \
                     fake_img_tiled)
 
             # save current state of generator and critic
-            torch.save(self.generator.state_dict(), '/tmp/{}_generator.pt'.format(self.conf.name))
-            torch.save(self.critic.state_dict(), '/tmp/{}_critic.pt'.format(self.conf.name))
+            torch.save(self.generator.state_dict(), '{}/{}_generator.pt'.format(self.conf.ld, \
+                self.conf.name))
+            torch.save(self.critic.state_dict(), '{}/{}_critic.pt'.format(self.conf.ld, \
+                self.conf.name))
 
         # done with all epochs
