@@ -39,7 +39,5 @@ def main():
     # train gan on training set
     gan.train(train_loader, args.ne)
 
-
-
 if __name__ == '__main__':
     main()
