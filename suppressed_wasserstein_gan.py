@@ -159,7 +159,8 @@ class SuppressedWassersteinGAN():
 
                 # add regularizer to supress output given random images
                 rand_crit_out = self.critic(self.img_dist.sample().to(self.device))
-                crit_supp_loss = torch.mean(rand_crit_out)
+                crit_supp_loss = torch.nn.functional.mse_loss(rand_crit_out, \
+                    torch.zeros_like(rand_crit_out))
                 crit_loss += 1. * crit_supp_loss
 
                 # NOTE: Currently must update critic and generator separately. If both are updated
