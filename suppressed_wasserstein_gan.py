@@ -189,8 +189,6 @@ class SuppressedWassersteinGAN():
                 # accumulate running wasserstein distance
                 running_w_dist += w_dist.item()
 
-                if i % 30 == 29: break
-
             # done with current epoch
 
             # compute average wasserstein distance over epoch
