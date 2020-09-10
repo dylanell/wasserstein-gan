@@ -4,11 +4,8 @@ Train a Wasserstein GAN on the MNIST dataset.
 
 import argparse
 
-# relative imports
-from cnn import CNN
-from transpose_cnn import TransposeCNN
-from dataloader_utils import make_mnist_dataloaders
-from wasserstein_gan import WassersteinGAN
+from util.dataloader_utils import make_mnist_dataloaders
+from model.wasserstein_gan import WassersteinGAN
 
 def main():
     parser = argparse.ArgumentParser()

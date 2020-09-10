@@ -8,11 +8,9 @@ import logging
 import numpy as np
 import matplotlib.pyplot as plt
 
-# relative imports
-from cnn import CNN
-from transpose_cnn import TransposeCNN
-
-from data_utils import tile_images
+from model.cnn import CNN
+from model.transpose_cnn import TransposeCNN
+from util.data_utils import tile_images
 
 class SuppressedWassersteinGAN():
     def __init__(self, config):
