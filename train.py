@@ -12,6 +12,7 @@ from wasserstein_gan import WassersteinGAN
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('data_dir', help='path to dataset directory')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--bs', type=int, default=64, help='batch size')
     parser.add_argument('--nw', type=int, default=1, help='number of dataloader workers')
@@ -23,7 +24,6 @@ def main():
     parser.add_argument('--name', type=str, default='wgan', help='model name')
     parser.add_argument('--v', type=bool, default=False, help='verbose flag')
     parser.add_argument('--ld', type=str, default='/tmp/', help='log and other output directory')
-    parser.add_argument('--dd', type=str, default='/tmp/mnist_data/', help='mnist data directory')
     args = parser.parse_args()
 
     # initialize gan model
@@ -33,7 +33,7 @@ def main():
     train_loader, test_loader = make_mnist_dataloaders(
         batch_size=args.bs,
         num_workers=args.nw,
-        data_dir=args.dd
+        data_dir=args.data_dir
     )
 
     # train gan on training set
