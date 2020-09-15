@@ -1,0 +1,15 @@
+dataset_directory: '/tmp/'
+output_directory: '/tmp/'
+number_epochs: 20
+batch_size: 32
+input_dimensions: !!python/tuple
+- 32
+- 32
+- 1
+learning_rate: 0.001
+z_dimension: 128
+model_name: 'wgan'
+number_workers: 1
+number_train: 60000
+number_test: 10000
+verbosity: False

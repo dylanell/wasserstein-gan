@@ -14,12 +14,18 @@ from util.data_utils import tile_images
 
 class SuppressedWassersteinGAN():
     def __init__(self, config):
-        # get args
-        self.conf = config
+        # get config args
+        self.out_dir = config['output_directory']
+        self.batch_size = config['batch_size']
+        self.input_dims = config['input_dimensions']
+        self.learn_rate = config['learning_rate']
+        self.z_dim = config['z_dimension']
+        self.name = config['model_name']
+        self.verbosity = config['verbosity']
 
         # initialize logging to create new log file and log any level event
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
-            filename='{}{}.log'.format(self.conf.ld, self.conf.name), filemode='w', \
+            filename='{}{}.log'.format(self.out_dir, self.name), filemode='w', \
             level=logging.DEBUG)
 
         # try to get gpu device, if not just use cpu
@@ -27,50 +33,50 @@ class SuppressedWassersteinGAN():
 
         # initialize critic (CNN) model
         self.critic = CNN(
-            in_chan=self.conf.nchan,
+            in_chan=self.input_dims[-1],
             out_dim=1,
             out_act=torch.nn.LeakyReLU()
         )
 
         # initialize generator (TransposeCNN) model
         self.generator = TransposeCNN(
-            in_dim=self.conf.zdim,
-            out_chan=self.conf.nchan,
+            in_dim=self.z_dim,
+            out_chan=self.input_dims[-1],
             out_act=torch.nn.Tanh()
         )
 
         # initialize zdim dimensional normal distribution to sample generator inputs
         self.z_dist = torch.distributions.normal.Normal(
-            torch.zeros(self.conf.bs, self.conf.zdim),
-            torch.ones(self.conf.bs, self.conf.zdim)
+            torch.zeros(self.batch_size, self.z_dim),
+            torch.ones(self.batch_size, self.z_dim)
         )
 
         # initialize bs dimensional uniform distribution to sample eps vals for creating interpolations
         self.eps_dist = torch.distributions.uniform.Uniform(
-            torch.zeros(self.conf.bs, 1, 1, 1),
-            torch.ones(self.conf.bs, 1, 1, 1)
+            torch.zeros(self.batch_size, 1, 1, 1),
+            torch.ones(self.batch_size, 1, 1, 1)
         )
 
         # initialize a random image distriution
         self.img_dist = torch.distributions.Uniform(
-            -1.*torch.ones(self.conf.bs, 1, 32, 32),
-            torch.ones(self.conf.bs, 1, 32, 32)
+            -1.*torch.ones(self.batch_size, 1, 32, 32),
+            torch.ones(self.batch_size, 1, 32, 32)
         )
 
         # sample a batch of z to have constant set of generator inputs as model trains
         self.z_const = self.z_dist.sample()[:64].to(self.device)
 
         # initialize critic and generator optimizers
-        self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.conf.lr)
-        self.gen_opt = torch.optim.Adam(self.generator.parameters(), lr=self.conf.lr)
+        self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.learn_rate)
+        self.gen_opt = torch.optim.Adam(self.generator.parameters(), lr=self.learn_rate)
 
         # move tensors to device
         self.critic.to(self.device)
         self.generator.to(self.device)
 
     def print_structure(self):
-        print('[INFO] \'{}\' critic structure \n{}'.format(self.conf.name, self.critic))
-        print('[INFO] \'{}\' generator structure \n{}'.format(self.conf.name, self.generator))
+        print('[INFO] \'{}\' critic structure \n{}'.format(self.name, self.critic))
+        print('[INFO] \'{}\' generator structure \n{}'.format(self.name, self.generator))
 
     def compute_losses(self, real_crit_out, fake_crit_out, crit_grad):
         # compute wasserstein distance estimate
@@ -172,13 +178,13 @@ class SuppressedWassersteinGAN():
                     gen_loss.backward()
                     self.gen_opt.step()
 
-                    if self.conf.v:
+                    if self.verbosity:
                         # generate const batch of fake samples and tile
                         fake_img_tiled = self.generate_samples_and_tile(self.z_const)
 
                         # save tiled image
-                        plt.imsave('{}{}_gen_step_{}.png'.format(self.conf.ld, self.conf.name, \
-                            (e*(int(self.conf.ntrain/self.conf.bs)+1))+i), fake_img_tiled)
+                        plt.imsave('{}{}_gen_step_{}.png'.format(self.out_dir, self.name, \
+                            (e*(int(self.conf.ntrain/self.batch_size)+1))+i), fake_img_tiled)
                 else:
                     # update just the critic
                     self.crit_opt.zero_grad()
@@ -204,15 +210,15 @@ class SuppressedWassersteinGAN():
             # generate const batch of fake samples and tile
             fake_img_tiled = self.generate_samples_and_tile(z_sample)
 
-            if self.conf.v:
+            if self.verbosity:
                 # save tiled image
-                plt.imsave('{}{}_gen_epoch_{}.png'.format(self.conf.ld, self.conf.name, e+1), \
+                plt.imsave('{}{}_gen_epoch_{}.png'.format(self.out_dir, self.name, e+1), \
                     fake_img_tiled)
 
             # save current state of generator and critic
-            torch.save(self.generator.state_dict(), '{}{}_generator.pt'.format(self.conf.ld, \
-                self.conf.name))
-            torch.save(self.critic.state_dict(), '{}{}_critic.pt'.format(self.conf.ld, \
-                self.conf.name))
+            torch.save(self.generator.state_dict(), '{}{}_generator.pt'.format(self.out_dir, \
+                self.name))
+            torch.save(self.critic.state_dict(), '{}{}_critic.pt'.format(self.out_dir, \
+                self.name))
 
         # done with all epochs
