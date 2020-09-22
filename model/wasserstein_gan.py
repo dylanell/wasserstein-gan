@@ -51,13 +51,15 @@ class WassersteinGAN():
             torch.ones(self.batch_size, self.z_dim)
         )
 
-        # initialize bs dimensional uniform distribution to sample eps vals for creating interpolations
+        # initialize bs dimensional uniform distribution to sample eps vals for
+        # creating interpolations
         self.eps_dist = torch.distributions.uniform.Uniform(
             torch.zeros(self.batch_size, 1, 1, 1),
             torch.ones(self.batch_size, 1, 1, 1)
         )
 
-        # sample a batch of z to have constant set of generator inputs as model trains
+        # sample a batch of z to have constant set of generator inputs
+        #  as model trains
         self.z_const = self.z_dist.sample()[:64].to(self.device)
 
         # initialize critic and generator optimizers
@@ -155,10 +157,11 @@ class WassersteinGAN():
                     crit_grad
                 )
 
-                # NOTE: Currently must update critic and generator separately. If both are updated
-                # within the same loop, either updating doesn't happen, or an inplace operator
-                # error occurs which prevents gradient computation, depending on the ordering of
-                # the zero_grad(), backward(), step() calls. Currently don't know why :(
+                # NOTE: Currently must update critic and generator separately.
+                # If both are updated within the same loop, either updating
+                # doesn't happen, or an inplace operator error occurs which
+                # prevents gradient computation, depending on the ordering of
+                # the zero_grad(), backward(), step() calls. ???
 
                 if i % 10 == 9:
                     # update just the generator (every 10th step)

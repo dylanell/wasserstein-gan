@@ -167,10 +167,11 @@ class SuppressedWassersteinGAN():
                     torch.zeros_like(rand_crit_out))
                 crit_loss += 1. * crit_supp_loss
 
-                # NOTE: Currently must update critic and generator separately. If both are updated
-                # within the same loop, either updating doesn't happen, or an inplace operator
-                # error occurs which prevents gradient computation, depending on the ordering of
-                # the zero_grad(), backward(), step() calls. Currently don't know why :(
+                # NOTE: Currently must update critic and generator separately.
+                # If both are updated within the same loop, either updating
+                # doesn't happen, or an inplace operator error occurs which
+                # prevents gradient computation, depending on the ordering of
+                # the zero_grad(), backward(), step() calls. ???
 
                 if i % 10 == 9:
                     # update just the generator (every 10th step)
