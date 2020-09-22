@@ -122,7 +122,7 @@ class SuppressedWassersteinGAN():
             for i, batch in enumerate(dataloader):
 
                 # get images from batch
-                real_img_batch = batch[0].to(self.device)
+                real_img_batch = batch['image'].to(self.device)
 
                 # get number of samples in batch
                 bs = real_img_batch.shape[0]

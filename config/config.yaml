@@ -1,4 +1,4 @@
-dataset_directory: '/tmp/'
+dataset_directory: '/home/dylan/datasets/mnist_png/'
 output_directory: '/tmp/'
 number_epochs: 20
 batch_size: 32
