@@ -33,30 +33,3 @@ class ImageDataset(torch.utils.data.Dataset):
         data = {'image': image, 'label': label}
 
         return data
-
-class RawDataset(torch.utils.data.Dataset):
-    """
-    Make a Pytorch dataset from provided samples and labels.
-    """
-
-    def __init__(self, samples, labels, transform=None):
-        self.samples = samples
-        self.labels = labels
-        self.transform = transform
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, idx):
-        # get sample and label
-        sample = self.samples[idx]
-        label = self.labels[idx]
-
-        # apply sample transforms
-        if self.transform:
-            sample = self.transform(sample)
-
-        # get sample and label by idx
-        data = {'sample': sample, 'label': label}
-
-        return data

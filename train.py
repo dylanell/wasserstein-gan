@@ -12,7 +12,7 @@ from model.wasserstein_gan import WassersteinGAN
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--config_file', default='config/config.yaml',
+        '--config_file', default='config.yaml',
         help='path to configuration yaml file')
     args = parser.parse_args()
 
@@ -41,7 +41,7 @@ def main():
 
     # initialize gan model
     gan = WassersteinGAN(config)
-    
+
     # train gan on training set
     gan.train(train_loader, config['number_epochs'])
 
