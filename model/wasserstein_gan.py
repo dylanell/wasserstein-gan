@@ -27,7 +27,7 @@ class WassersteinGAN():
         # initialize logging to create new log file and log any level event
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
             filename='{}{}.log'.format(self.out_dir, self.name), filemode='w', \
-            level=logging.DEBUG)
+            level=logging.INFO)
 
         # try to get gpu device, if not just use cpu
         self.device = \
