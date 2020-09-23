@@ -21,6 +21,8 @@ class WassersteinGAN():
         self.z_dim = config['z_dimension']
         self.name = config['model_name']
         self.verbosity = config['verbosity']
+        self.num_train = config['number_train']
+        self.num_test = config['number_test']
 
         # initialize logging to create new log file and log any level event
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
