@@ -2,7 +2,6 @@
 Train a Wasserstein GAN on the MNIST dataset.
 """
 
-import argparse
 import yaml
 
 from util.pytorch_utils import build_image_dataset
@@ -10,14 +9,8 @@ from util.data_utils import generate_df_from_image_dataset
 from model.wasserstein_gan import WassersteinGAN
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--config_file', default='config.yaml',
-        help='path to configuration yaml file')
-    args = parser.parse_args()
-
     # parse configuration file
-    with open(args.config_file, 'r') as fp:
+    with open('config.yaml', 'r') as fp:
         config = yaml.load(fp, Loader=yaml.FullLoader)
 
     # generate filenames/labels df from image data directory
