@@ -1,7 +1,9 @@
 # wasserstein-gan
 Implementation of the [Improved Wasserstein Generative Adversarial Network (GAN)](https://arxiv.org/pdf/1704.00028.pdf) on the [MNIST Dataset](http://yann.lecun.com/exdb/mnist/).
 
-![](docs/generator_train.gif)
+| ![](docs/generator_train.gif) |
+| :-: |
+| *Generator outputs during training.* |
 
 ### Generative Adversarial Networks (GANs):
 
