@@ -17,6 +17,7 @@ Implementation of the [Improved Wasserstein Generative Adversarial Network (GAN)
 - torchvision
 - numpy
 - imageio
+- PIL
 
 ### Image Dataset Format:
 
