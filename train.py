@@ -24,14 +24,6 @@ def main():
         num_workers=config['number_workers']
     )
 
-    # build testing dataloader
-    test_set, test_loader = build_image_dataset(
-        data_dict['test'],
-        image_size=config['input_dimensions'][:-1],
-        batch_size=config['batch_size'],
-        num_workers=config['number_workers']
-    )
-
     # initialize gan model
     gan = WassersteinGAN(config)
 
