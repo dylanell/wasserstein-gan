@@ -13,11 +13,12 @@ Implementation of the [Improved Wasserstein Generative Adversarial Network (GAN)
 ### Python Packages:
 
 - jupyterlab
-- torch
+- pytorch
 - torchvision
 - numpy
 - imageio
 - PIL
+- pyyaml
 
 ### Image Dataset Format:
 
