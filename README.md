@@ -61,8 +61,6 @@ Train the Wasserstein GAN by running:
 $ python train.py
 ```
 
-By default,
-
 ### Jupyter Notebook:
 
 This project is accompanied by a Jupyter notebook that explains the theory behind Wasserstein GANs as well as some details on how to reload model files and create instances of trained critic and generator networks.
