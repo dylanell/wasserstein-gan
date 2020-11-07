@@ -1,6 +1,0 @@
-jupyterlab
-torch
-torchvision
-numpy
-imageio
-PIL
