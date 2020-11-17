@@ -4,6 +4,7 @@ Convolutional neural network implemented as Pytorch nn.Module.
 
 import torch
 
+
 class CNN(torch.nn.Module):
     # initialize the base class and define network layers
     def __init__(self, in_chan, out_dim, out_act=None):
@@ -28,7 +29,7 @@ class CNN(torch.nn.Module):
         self.norm_5 = torch.nn.LayerNorm([512, 2, 2])
 
         # define fully connected output layer
-        self.fc_1 = torch.nn.Linear(512*2*2, out_dim)
+        self.fc_1 = torch.nn.Linear(512 * 2 * 2, out_dim)
 
     # define network layer connections and forward propagate input x through
     # the network and return output

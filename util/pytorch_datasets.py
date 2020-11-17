@@ -7,6 +7,7 @@ Reference:
 import torch
 from PIL import Image
 
+
 class ImageDataset(torch.utils.data.Dataset):
     """
     Make a PyTorch dataset from a dataframe of image files and labels.

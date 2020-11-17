@@ -8,6 +8,7 @@ from util.pytorch_utils import build_image_dataset
 from util.data_utils import generate_df_from_image_dataset
 from model.wasserstein_gan import WassersteinGAN
 
+
 def main():
     # parse configuration file
     with open('config.yaml', 'r') as fp:
@@ -29,6 +30,7 @@ def main():
 
     # train gan on training set
     gan.train(train_loader, config['number_epochs'])
+
 
 if __name__ == '__main__':
     main()

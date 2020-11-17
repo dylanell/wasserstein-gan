@@ -11,6 +11,7 @@ from model.cnn import CNN
 from model.transpose_cnn import TransposeCNN
 from util.data_utils import tile_images
 
+
 class WassersteinGAN():
     def __init__(self, config):
         # get config args
@@ -25,9 +26,11 @@ class WassersteinGAN():
         self.num_test = config['number_test']
 
         # initialize logging to create new log file and log any level event
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', \
-            filename='{}{}.log'.format(self.out_dir, self.name), filemode='w', \
-            level=logging.INFO)
+        logging.basicConfig(format='%(asctime)s %(message)s',
+                            datefmt='%m/%d/%Y %I:%M:%S %p',
+                            filename='{}{}.log'.format(self.out_dir, self.name),
+                            filemode='w',
+                            level=logging.INFO)
 
         # try to get gpu device, if not just use cpu
         self.device = \
@@ -47,7 +50,8 @@ class WassersteinGAN():
             out_act=torch.nn.Tanh()
         )
 
-        # initialize zdim dimensional normal distribution to sample generator inputs
+        # initialize zdim dimensional normal distribution to sample generator
+        # inputs
         self.z_dist = torch.distributions.normal.Normal(
             torch.zeros(self.batch_size, self.z_dim),
             torch.ones(self.batch_size, self.z_dim)
@@ -65,26 +69,32 @@ class WassersteinGAN():
         self.z_const = self.z_dist.sample()[:64].to(self.device)
 
         # initialize critic and generator optimizers
-        self.crit_opt = torch.optim.Adam(self.critic.parameters(), lr=self.learn_rate)
-        self.gen_opt = torch.optim.Adam(self.generator.parameters(), lr=self.learn_rate)
+        self.crit_opt = torch.optim.Adam(self.critic.parameters(),
+                                         lr=self.learn_rate)
+        self.gen_opt = torch.optim.Adam(self.generator.parameters(),
+                                        lr=self.learn_rate)
 
         # move tensors to device
         self.critic.to(self.device)
         self.generator.to(self.device)
 
     def print_structure(self):
-        print('[INFO] \'{}\' critic structure \n{}'.format(self.name, self.critic))
-        print('[INFO] \'{}\' generator structure \n{}'.format(self.name, self.generator))
+        print('[INFO] \'{}\' critic structure \n{}'.format(self.name,
+                                                           self.critic))
+        print('[INFO] \'{}\' generator structure \n{}'.format(self.name,
+                                                              self.generator))
 
-    def compute_losses(self, real_crit_out, fake_crit_out, crit_grad):
+    @staticmethod
+    def compute_losses(real_crit_out, fake_crit_out, crit_grad):
         # compute wasserstein distance estimate
         wass_dist = torch.mean(real_crit_out - fake_crit_out)
 
         # compute mean of normed critic gradients
         crit_grad_mean_norm = torch.mean(torch.norm(crit_grad, p=2, dim=(2, 3)))
 
-        # lagrangian multiplier for critic gradient penalty (push crit_grad_mean_norm -> 1)
-        crit_grad_penalty = (crit_grad_mean_norm - 1.)**2
+        # lagrangian multiplier for critic gradient penalty
+        # (push crit_grad_mean_norm -> 1)
+        crit_grad_penalty = (crit_grad_mean_norm - 1.) ** 2
 
         # compute generator loss
         gen_loss = wass_dist
@@ -95,7 +105,7 @@ class WassersteinGAN():
         return gen_loss, crit_loss, wass_dist, crit_grad_penalty
 
     def generate_samples_and_tile(self, z):
-        # geneatr a batch of fak images from z input
+        # generator a batch of fak images from z input
         fake_img_batch = self.generator(z)
 
         # detach, move to cpu, and covert images to numpy
@@ -116,7 +126,7 @@ class WassersteinGAN():
             # accumulator for wasserstein distance over an epoch
             running_w_dist = 0.0
 
-            # iteate through batches
+            # iterate through batches
             for i, batch in enumerate(dataloader):
 
                 # get images from batch
@@ -125,24 +135,29 @@ class WassersteinGAN():
                 # get number of samples in batch
                 bs = real_img_batch.shape[0]
 
-                # sample from z and eps distribution and clip based on sumber of samples in batch
+                # sample from z and eps distribution and clip based on number
+                # of samples in batch
                 z_sample = self.z_dist.sample()[:bs].to(self.device)
                 eps_sample = self.eps_dist.sample()[:bs].to(self.device)
 
-                # generate batch of fake images by feeding sampled z through generator
+                # generate batch of fake images by feeding sampled z through
+                # generator
                 fake_img_batch = self.generator(z_sample)
 
-                # compute batch of images by interpolating eps_sample amount between real and fake
+                # compute batch of images by interpolating eps_sample amount
+                # between real and fake
                 # (generated) images
                 int_img_batch = (eps_sample * real_img_batch) + \
                                 ((1. - eps_sample) * fake_img_batch)
 
-                # compute critic outputs from real, fake, and interpolated image batches
+                # compute critic outputs from real, fake, and interpolated
+                # image batches
                 real_crit_out = self.critic(real_img_batch)
                 fake_crit_out = self.critic(fake_img_batch)
                 int_crit_out = self.critic(int_img_batch)
 
-                # compute gradient of critic output w.r.t interpolated image inputs
+                # compute gradient of critic output w.r.t interpolated image
+                # inputs
                 crit_grad = torch.autograd.grad(
                     outputs=int_crit_out,
                     inputs=int_img_batch,
@@ -173,12 +188,14 @@ class WassersteinGAN():
 
                     if self.verbosity:
                         # generate const batch of fake samples and tile
-                        fake_img_tiled = self.generate_samples_and_tile(self.z_const)
+                        fake_img_tiled = self.generate_samples_and_tile(
+                            self.z_const)
 
                         # save tiled image
                         plt.imsave('{}{}_gen_step_{}.png'.format(
                             self.out_dir, self.name,
-                            (e*(int(self.num_train/self.batch_size)+1))+i),
+                            (e * (int(
+                                self.num_train / self.batch_size) + 1)) + i),
                             fake_img_tiled)
                 else:
                     # update just the critic
@@ -195,8 +212,9 @@ class WassersteinGAN():
             epoch_avg_w_dist = running_w_dist / i
 
             # log epoch stats info
-            logging.info('| epoch: {:3} | wasserstein distance: {:6.2f} | gradient penalty: '\
-                '{:6.2f} |'.format(e+1, epoch_avg_w_dist, grad_pen))
+            logging.info(
+                '| epoch: {:3} | wasserstein distance: {:6.2f} | gradient '
+                'penalty: {:6.2f} |'.format(e + 1, epoch_avg_w_dist, grad_pen))
 
             # new sample from z dist
             z_sample = self.z_dist.sample()[:64].to(self.device)
@@ -207,12 +225,13 @@ class WassersteinGAN():
             if self.verbosity:
                 # save tiled image
                 plt.imsave('{}{}_gen_epoch_{}.png'.format(self.out_dir,
-                    self.name, e+1), fake_img_tiled)
+                                                          self.name, e + 1),
+                           fake_img_tiled)
 
             # save current state of generator and critic
             torch.save(self.generator.state_dict(),
-                '{}{}_generator.pt'.format(self.out_dir, self.name))
+                       '{}{}_generator.pt'.format(self.out_dir, self.name))
             torch.save(self.critic.state_dict(),
-                '{}{}_critic.pt'.format(self.out_dir, self.name))
+                       '{}{}_critic.pt'.format(self.out_dir, self.name))
 
         # done with all epochs

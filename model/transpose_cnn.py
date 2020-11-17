@@ -4,6 +4,7 @@ Transpose convolutional neural network implemented as Pytorch nn.Module.
 
 import torch
 
+
 class TransposeCNN(torch.nn.Module):
     # initialize the base class and define network layers
     def __init__(self, in_dim, out_chan, out_act=None):
@@ -14,7 +15,7 @@ class TransposeCNN(torch.nn.Module):
         self.out_act = out_act
 
         # define fully connected input layer
-        self.fc_1 = torch.nn.Linear(in_dim, 512*2*2)
+        self.fc_1 = torch.nn.Linear(in_dim, 512 * 2 * 2)
 
         # define convolutional layers
         self.conv_1 = torch.nn.ConvTranspose2d(512, 256, 3, stride=2, padding=1)
@@ -42,7 +43,8 @@ class TransposeCNN(torch.nn.Module):
         z_1 = torch.relu(self.fc_1(x))
         z_1_unflat = torch.reshape(z_1, [bs, 512, 2, 2])
         z_1_unflat_norm = self.norm_1(z_1_unflat)
-        z_2 = torch.relu(self.conv_1(z_1_unflat_norm, output_size=(bs, 256, 4, 4)))
+        z_2 = torch.relu(
+            self.conv_1(z_1_unflat_norm, output_size=(bs, 256, 4, 4)))
         z_2_norm = self.norm_2(z_2)
         z_3 = torch.relu(self.conv_2(z_2_norm, output_size=(bs, 128, 8, 8)))
         z_3_norm = self.norm_3(z_3)
