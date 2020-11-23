@@ -90,7 +90,8 @@ class WassersteinGAN():
         wass_dist = torch.mean(real_crit_out - fake_crit_out)
 
         # compute mean of normed critic gradients
-        crit_grad_mean_norm = torch.mean(torch.norm(crit_grad, p=2, dim=(2, 3)))
+        crit_grad_mean_norm = torch.mean(torch.norm(
+            crit_grad, p=2, dim=(2, 3)))
 
         # lagrangian multiplier for critic gradient penalty
         # (push crit_grad_mean_norm -> 1)
