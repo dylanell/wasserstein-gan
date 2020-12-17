@@ -8,7 +8,7 @@ Implementation of the [Improved Wasserstein Generative Adversarial Network (GAN)
 
 ### Environment:
 
-- Python 3
+- Python 3.8.5
 
 ### Install Python Packages:
 
