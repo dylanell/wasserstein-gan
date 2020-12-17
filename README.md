@@ -8,17 +8,13 @@ Implementation of the [Improved Wasserstein Generative Adversarial Network (GAN)
 
 ### Environment:
 
-- Python 3.7.4
+- Python 3
 
-### Python Packages:
+### Install Python Packages:
 
-- jupyterlab
-- pytorch
-- torchvision
-- numpy
-- imageio
-- PIL
-- pyyaml
+```
+$ pip install -r requirements.txt
+```
 
 ### Image Dataset Format:
 
